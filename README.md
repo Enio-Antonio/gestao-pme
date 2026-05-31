@@ -1,30 +1,7 @@
-root = true
+# Gestão PME
 
-[*]
-charset = utf-8
-end_of_line = lf
-insert_final_newline = true
-indent_style = space
-indent_size = 2
-trim_trailing_whitespace = true
-
-[*.ts]
-indent_size = 2
-
-[*.tsx]
-indent_size = 2
-
-[*.js]
-indent_size = 2
-
-[*.json]
-indent_size = 2
-
-[*.yml]
-indent_size = 2
-
-[*.yaml]
-indent_size = 2
-
-[*.md]
-trim_trailing_whitespace = false
+- [x] Tela de login
+- [x] API de cadastro/login
+- [x] UI geral
+- [] Testes de cadastro/login
+- [] Testes de funções gerais
