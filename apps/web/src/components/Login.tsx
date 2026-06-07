@@ -16,26 +16,24 @@ export default function LoginScreen() {
   const [companyName, setCompanyName] = useState("");
   const [companyCode, setCompanyCode] = useState(""); // Para funcionários vincularem à empresa
 
-  // Estados de requisição para a API Python
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Função para lidar com o envio dos dados para a API Python
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    // Ajuste as URLs de acordo com as rotas do seu backend Python (FastAPI, Flask, Django, etc.)
-    const baseUrl = "http://localhost:8000/api/v1";
+    const baseUrl = "http://localhost:8000/users";
+
     const endpoint =
-      mode === "login" ? `${baseUrl}/auth/login` : `${baseUrl}/auth/register`;
+      mode === "login" ? `${baseUrl}/login/` : `${baseUrl}/`;
 
     const payload =
       mode === "login"
-        ? { username: email, password } // Padrão OAuth2 comumente usado no Python/FastAPI
+        ? { username: email, password }
         : {
             email,
             password,
@@ -63,10 +61,11 @@ export default function LoginScreen() {
       }
 
       if (mode === "login") {
-        // Guarde o token JWT retornado pelo Python
         localStorage.setItem("@PMEGestao:token", data.access_token);
         setSuccessMessage("Login realizado com sucesso! Redirecionando...");
-        // window.location.href = '/dashboard';
+        setTimeout(() => {
+          window.location.href = '/home';
+        }, 1500);
       } else {
         setSuccessMessage("Cadastro realizado com sucesso! Faça seu login.");
         setMode("login");

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   DollarSign,
@@ -7,6 +7,7 @@ import {
   Users,
   Menu,
   X,
+  LogOut
 } from "lucide-react";
 import Dashboard from "@/components/Dashboard";
 import Financeiro from "@/components/Financeiro";
@@ -26,6 +27,17 @@ function App() {
   const [activeModule, setActiveModule] = useState<Module>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // 1. Substituímos a simulação pela verificação real do Token do Django
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  // Verifica se o token existe assim que o App carrega
+  useEffect(() => {
+    const token = localStorage.getItem("@PMEGestao:token");
+    if (token) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   const modules = [
     { id: "dashboard" as Module, name: "Dashboard", icon: LayoutDashboard },
     { id: "financeiro" as Module, name: "Financeiro", icon: DollarSign },
@@ -34,9 +46,15 @@ function App() {
     { id: "negocios" as Module, name: "Negócios", icon: Users },
   ];
 
-  const isAuthenticated = false; // Simulação de autenticação
+  // 2. Função real de Logout
+  const handleLogout = () => {
+    localStorage.removeItem("@PMEGestao:token");
+    setIsAuthenticated(false);
+  };
 
   if (!isAuthenticated) {
+    // Se não estiver logado, mostra o Login.
+    // Quando o Login der certo e der um "window.location.href = '/'", a página recarrega e entra no Dashboard!
     return <Login />;
   }
 
@@ -79,7 +97,7 @@ function App() {
         </div>
 
         {/* Menu */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {modules.map((module) => {
             const Icon = module.icon;
             const isActive = activeModule === module.id;
@@ -100,17 +118,30 @@ function App() {
           })}
         </nav>
 
-        {/* User Info */}
+        {/* User Info & Logout */}
         <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 font-semibold">AD</span>
-            </div>
-            {sidebarOpen && (
-              <div>
-                <p className="text-sm font-medium text-gray-900">Admin</p>
-                <p className="text-xs text-gray-500">admin@empresa.com</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-blue-600 font-semibold">AD</span>
               </div>
+              {sidebarOpen && (
+                <div className="overflow-hidden">
+                  <p className="text-sm font-medium text-gray-900 truncate">Admin</p>
+                  <p className="text-xs text-gray-500 truncate">admin@empresa.com</p>
+                </div>
+              )}
+            </div>
+
+            {/* Botão de Sair */}
+            {sidebarOpen && (
+              <button
+                onClick={handleLogout}
+                className="text-gray-400 hover:text-red-500 transition-colors p-2"
+                title="Sair"
+              >
+                <LogOut size={18} />
+              </button>
             )}
           </div>
         </div>
