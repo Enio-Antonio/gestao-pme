@@ -24,4 +24,3 @@ class Projeto(models.Model):
     status = models.CharField(max_length=20, default="planejado")
     progresso = models.IntegerField(default=0)
 
-# (Você pode adicionar os models de Meta e Lead aqui depois seguindo a mesma lógica)
