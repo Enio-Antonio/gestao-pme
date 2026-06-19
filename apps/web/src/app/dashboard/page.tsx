@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
@@ -7,28 +9,24 @@ import {
   Users,
   Menu,
   X,
-  LogOut
+  LogOut,
 } from "lucide-react";
 import Dashboard from "@/components/Dashboard";
 import Financeiro from "@/components/Financeiro";
 import Estrategia from "@/components/Estrategia";
 import Projetos from "@/components/Projetos";
 import Negocios from "@/components/Negocios";
-import Login from "@/components/Login";
+import { DataProvider } from "@/contexts/DataContext";
+// import Login from "@/components/Login";
 
-type Module =
-  | "dashboard"
-  | "financeiro"
-  | "estrategia"
-  | "projetos"
-  | "negocios";
+type Module = "dashboard" | "financeiro" | "estrategia" | "projetos" | "negocios";
 
-function App() {
+export default function Home() {
   const [activeModule, setActiveModule] = useState<Module>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // 1. Substituímos a simulação pela verificação real do Token do Django
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
   // Verifica se o token existe assim que o App carrega
   useEffect(() => {
@@ -52,11 +50,11 @@ function App() {
     setIsAuthenticated(false);
   };
 
-  if (!isAuthenticated) {
-    // Se não estiver logado, mostra o Login.
-    // Quando o Login der certo e der um "window.location.href = '/'", a página recarrega e entra no Dashboard!
-    return <Login />;
-  }
+  // if (!isAuthenticated) {
+  //   // Se não estiver logado, mostra o Login.
+  //   // Quando o Login der certo e der um "window.location.href = '/'", a página recarrega e entra no Dashboard!
+  //   return <Login />;
+  // }
 
   const renderModule = () => {
     switch (activeModule) {
@@ -81,23 +79,21 @@ function App() {
       <aside
         className={`${
           sidebarOpen ? "w-64" : "w-20"
-        } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
+        } flex flex-col border-r border-gray-200 bg-white transition-all duration-300`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
-          {sidebarOpen && (
-            <h1 className="text-xl font-bold text-blue-600">PME Gestão</h1>
-          )}
+        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
+          {sidebarOpen && <h1 className="text-xl font-bold text-blue-600">PME Gestão</h1>}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="rounded-lg p-2 transition-colors hover:bg-gray-100"
           >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
         {/* Menu */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 space-y-2 overflow-y-auto p-4">
           {modules.map((module) => {
             const Icon = module.icon;
             const isActive = activeModule === module.id;
@@ -105,9 +101,9 @@ function App() {
               <button
                 key={module.id}
                 onClick={() => setActiveModule(module.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 transition-all ${
                   isActive
-                    ? "bg-blue-50 text-blue-600 font-medium"
+                    ? "bg-blue-50 font-medium text-blue-600"
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
@@ -119,16 +115,16 @@ function App() {
         </nav>
 
         {/* User Info & Logout */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="border-t border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-blue-600 font-semibold">AD</span>
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+                <span className="font-semibold text-blue-600">AD</span>
               </div>
               {sidebarOpen && (
                 <div className="overflow-hidden">
-                  <p className="text-sm font-medium text-gray-900 truncate">Admin</p>
-                  <p className="text-xs text-gray-500 truncate">admin@empresa.com</p>
+                  <p className="truncate text-sm font-medium text-gray-900">Admin</p>
+                  <p className="truncate text-xs text-gray-500">admin@empresa.com</p>
                 </div>
               )}
             </div>
@@ -137,7 +133,7 @@ function App() {
             {sidebarOpen && (
               <button
                 onClick={handleLogout}
-                className="text-gray-400 hover:text-red-500 transition-colors p-2"
+                className="p-2 text-gray-400 transition-colors hover:text-red-500"
                 title="Sair"
               >
                 <LogOut size={18} />
@@ -148,9 +144,10 @@ function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">{renderModule()}</main>
+
+      <DataProvider>
+        <main className="flex-1 overflow-auto">{renderModule()}</main>
+      </DataProvider>
     </div>
   );
 }
-
-export default App;

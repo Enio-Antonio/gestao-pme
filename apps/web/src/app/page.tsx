@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -106,6 +106,12 @@ interface Employee {
   password: string;
 }
 
+interface FormProps extends FormState {
+  form: any;
+  setForm: React.Dispatch<React.SetStateAction<any>>;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
 const registerForm = {
   admin: [
     {
@@ -197,9 +203,9 @@ const registerForm = {
   ],
 };
 
-function Form({ mode, role, isLoading }: FormState) {
+function Form({ mode, role, isLoading, form, setForm, onSubmit }: FormProps) {
   return (
-    <form className="space-y-5">
+    <form className="space-y-5" onSubmit={onSubmit}>
       <div className="space-y-4">
         {/* Login */}
         {mode === "login" && (
@@ -215,8 +221,7 @@ function Form({ mode, role, isLoading }: FormState) {
               <input
                 type="text"
                 required
-                // value={companyCode}
-                // onChange={(e) => setCompanyCode(e.target.value)}
+                onChange={(e) => setForm((prev) => ({ ...prev, companyCode: e.target.value }))}
                 placeholder="Ex: PME-12345"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
               />
@@ -233,8 +238,7 @@ function Form({ mode, role, isLoading }: FormState) {
               <input
                 type="text"
                 required
-                // value={cpf}
-                // onChange={(e) => setCpf(e.target.value)}
+                onChange={(e) => setForm((prev) => ({ ...prev, cpf: e.target.value }))}
                 placeholder="000.000.000-00"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
               />
@@ -253,8 +257,7 @@ function Form({ mode, role, isLoading }: FormState) {
               <input
                 type="password"
                 required
-                // value={password}
-                // onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
                 placeholder="••••••••"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
               />
@@ -275,8 +278,8 @@ function Form({ mode, role, isLoading }: FormState) {
               {field.type === "select" ? (
                 <select
                   required
-                  // value={formData[field.key] || ""}
-                  // onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                  value={form[field.key as keyof typeof form] ?? ""}
+                  onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                 >
                   <option value="" disabled>
@@ -293,8 +296,8 @@ function Form({ mode, role, isLoading }: FormState) {
                 <input
                   type={field.type}
                   required
-                  // value={formData[field.key] || ""}
-                  // onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                  value={form[field.key as keyof typeof form] ?? ""}
+                  onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
                   placeholder={field.placeholder}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                 />
@@ -335,10 +338,120 @@ function Form({ mode, role, isLoading }: FormState) {
 }
 
 function RightSide() {
-  const [form, setForm] = useState<FormState>({
+  const [form, setForm] = useState({
     mode: "login",
     role: "employee",
+
+    // login
+    companyCode: "",
+    cpf: "",
+    password: "",
+
+    // admin
+    corporateName: "",
+    tradeName: "",
+    cnpj: "",
+    email: "",
+    taxRegime: "",
+
+    // employee
+    fullName: "",
+    position: "",
+
+    industry: "",
+
+    isLoading: false,
+    errorMessage: "",
+    successMessage: "",
   });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    setForm((prev) => ({
+      ...prev,
+      isLoading: true,
+      errorMessage: "",
+      successMessage: "",
+    }));
+
+    try {
+      const baseUrl = "http://localhost:8000/users";
+
+      const endpoint = form.mode === "login" ? `${baseUrl}/login/` : `${baseUrl}/`;
+
+      const payload =
+        form.mode === "login"
+          ? {
+              company_code: form.companyCode,
+              cpf: form.cpf,
+              password: form.password,
+            }
+          : form.role === "admin"
+            ? {
+                role: "admin",
+                corporate_name: form.corporateName,
+                trade_name: form.tradeName,
+                cnpj: form.cnpj,
+                email: form.email,
+                tax_regime: form.taxRegime,
+                industry: form.industry,
+                password: form.password,
+              }
+            : {
+                role: "employee",
+                company_code: form.companyCode,
+                full_name: form.fullName,
+                cpf: form.cpf,
+                position: form.position,
+                email: form.email,
+                password: form.password,
+              };
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Erro ao processar solicitação");
+      }
+
+      if (form.mode === "login") {
+        localStorage.setItem("@PMEGestao:token", data.access_token);
+
+        setForm((prev) => ({
+          ...prev,
+          successMessage: "Login realizado com sucesso!",
+        }));
+
+        setTimeout(() => {
+          window.location.href = "/home";
+        }, 1500);
+      } else {
+        setForm((prev) => ({
+          ...prev,
+          mode: "login",
+          successMessage: "Cadastro realizado com sucesso!",
+        }));
+      }
+    } catch (error) {
+      setForm((prev) => ({
+        ...prev,
+        errorMessage: error instanceof Error ? error.message : "Erro de conexão",
+      }));
+    } finally {
+      setForm((prev) => ({
+        ...prev,
+        isLoading: false,
+      }));
+    }
+  };
 
   return (
     <div className="flex w-full items-center justify-center bg-white p-6 sm:p-12 lg:w-1/2">
@@ -438,7 +551,7 @@ function RightSide() {
         </AnimatePresence>
 
         {/* Formulário */}
-        <Form {...form} />
+        <Form {...form} form={form} setForm={setForm} onSubmit={handleSubmit} />
 
         {/* Alternador de modo */}
         <div className="pt-2 text-center">
